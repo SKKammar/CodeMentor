@@ -21,6 +21,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Rate limit: reject conversations longer than 50 messages to prevent abuse
+    if (messages.length > 50) {
+      return new Response(
+        JSON.stringify({ error: "Conversation too long. Start a new session." }),
+        { status: 429, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
     const systemPrompt = getSystemPrompt(mode);
     const claudeMessages = messages.map((m: { role: string; content: string }) => ({
       role: m.role as "user" | "assistant",

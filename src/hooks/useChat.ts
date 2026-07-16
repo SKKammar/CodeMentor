@@ -21,23 +21,6 @@ export function useChat(): UseChatReturn {
   const [concepts, setConcepts] = useState<string[]>([]);
   const abortRef = useRef<AbortController | null>(null);
 
-  const extractConcepts = (text: string): string[] => {
-    try {
-      // Look for JSON concepts object at the end of explain responses
-      const match = text.match(/\{"concepts":\s*\[([^\]]*)\]\}/);
-      if (match) {
-        const inner = match[1];
-        return inner
-          .split(",")
-          .map((s) => s.trim().replace(/"/g, ""))
-          .filter(Boolean);
-      }
-    } catch {
-      // Silently ignore parse failures
-    }
-    return [];
-  };
-
   const sendMessage = useCallback(
     async (message: ChatMessage, mode: Mode, code?: string) => {
       setIsLoading(true);
@@ -114,11 +97,22 @@ export function useChat(): UseChatReturn {
           }
         }
 
-        // Extract concepts from explain mode responses
+        // Extract concepts via dedicated API call (explain mode only)
         if (mode === "explain") {
-          const extracted = extractConcepts(fullContent);
-          if (extracted.length > 0) {
-            setConcepts(extracted);
+          try {
+            const extractRes = await fetch("/api/concepts/extract", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ text: fullContent }),
+            });
+            if (extractRes.ok) {
+              const data = await extractRes.json();
+              if (data.concepts?.length > 0) {
+                setConcepts(data.concepts);
+              }
+            }
+          } catch {
+            // Non-critical — don't block the UX if extraction fails
           }
         }
 
