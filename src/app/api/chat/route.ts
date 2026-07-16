@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { streamClaudeResponse } from "@/lib/claude";
+import { streamGeminiResponse } from "@/lib/gemini";
 import { getSystemPrompt } from "@/lib/prompts";
 
 export async function POST(request: NextRequest) {
@@ -30,12 +30,12 @@ export async function POST(request: NextRequest) {
     }
 
     const systemPrompt = getSystemPrompt(mode);
-    const claudeMessages = messages.map((m: { role: string; content: string }) => ({
+    const geminiMessages = messages.map((m: { role: string; content: string }) => ({
       role: m.role as "user" | "assistant",
       content: m.content,
     }));
 
-    const stream = await streamClaudeResponse(systemPrompt, claudeMessages);
+    const stream = await streamGeminiResponse(systemPrompt, geminiMessages);
 
     return new Response(stream, {
       headers: {

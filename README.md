@@ -53,7 +53,7 @@ Instead, it uses a **Socratic hint engine** — when you're stuck, it asks targe
 | Language | TypeScript (strict) |
 | Styling | Tailwind CSS + Framer Motion |
 | Code Editor | Monaco Editor (same as VS Code) |
-| AI | Claude API (`claude-sonnet-4-6`) with SSE streaming |
+| AI | Google Gemini API (`gemini-2.5-flash`) with SSE streaming |
 | Database | Supabase (PostgreSQL + Row Level Security) |
 | Auth | Supabase Auth (email/password + GitHub OAuth) |
 | Charts | Recharts |
@@ -64,7 +64,7 @@ Instead, it uses a **Socratic hint engine** — when you're stuck, it asks targe
 ### Prerequisites
 - Node.js 18+
 - A [Supabase](https://supabase.com) project
-- An [Anthropic](https://console.anthropic.com) API key
+- A [Google AI Studio](https://aistudio.google.com/app/apikey) API key for Gemini
 
 ### 1. Clone & Install
 
@@ -83,7 +83,8 @@ cp .env.local.example .env.local
 Edit `.env.local` with your credentials:
 
 ```env
-ANTHROPIC_API_KEY=sk-ant-...
+GEMINI_API_KEY=your_key_here
+GEMINI_MODEL=gemini-2.5-flash
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 SUPABASE_SERVICE_ROLE_KEY=eyJ...
@@ -116,9 +117,9 @@ Open [http://localhost:3000](http://localhost:3000).
 src/
 ├── app/
 │   ├── api/
-│   │   ├── chat/route.ts          # Streaming Claude responses (SSE)
+│   │   ├── chat/route.ts          # Streaming Gemini responses (SSE)
 │   │   ├── concepts/route.ts       # Upsert concept tags to DB
-│   │   ├── concepts/extract/route.ts # Dedicated concept extraction via Claude
+│   │   ├── concepts/extract/route.ts # Dedicated concept extraction via Gemini
 │   │   ├── session/route.ts        # Save session to Supabase
 │   │   └── dashboard/route.ts     # Aggregated dashboard stats
 │   ├── auth/
@@ -144,7 +145,7 @@ src/
 │   ├── useAuth.ts                  # Supabase auth state
 │   └── useSession.ts               # Session saving hook
 ├── lib/
-│   ├── claude.ts                   # Claude API streaming helper
+│   ├── claude.ts → gemini.ts        # Gemini API streaming + helper
 │   ├── prompts.ts                  # System prompts (Socratic, Explain, Review)
 │   └── supabase/
 │       ├── client.ts               # Browser-side Supabase client

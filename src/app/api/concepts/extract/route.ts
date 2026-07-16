@@ -1,12 +1,10 @@
 import { NextRequest } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
-
-const anthropic = new Anthropic();
+import { generateGeminiText } from "@/lib/gemini";
 
 /**
  * POST /api/concepts/extract
  * Takes a code explanation response and extracts structured concept tags via a
- * dedicated Claude call. This is more robust than trying to parse JSON from
+ * dedicated Gemini call. This is more robust than trying to parse JSON from
  * the streamed markdown response.
  *
  * Body: { text: string }
@@ -24,26 +22,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 256,
-      system: `You are a code concept tagger. Given a code explanation, extract the key CS concepts discussed.
+    const systemPrompt = `You are a code concept tagger. Given a code explanation, extract the key CS concepts discussed.
 Return ONLY a JSON array of lowercase concept strings. No explanation, no markdown, just the array.
-Example: ["recursion", "hash map", "time complexity", "dynamic programming"]`,
-      messages: [{ role: "user", content: text }],
-    });
+Example: ["recursion", "hash map", "time complexity", "dynamic programming"]`;
 
-    const content = response.content[0];
-    if (!content || content.type !== "text") {
-      return new Response(
-        JSON.stringify({ error: "Failed to extract concepts" }),
-        { status: 500, headers: { "Content-Type": "application/json" } }
-      );
-    }
+    const raw = await generateGeminiText(systemPrompt, text);
 
-    // Parse the JSON array from Claude's response
-    const raw = content.text.trim();
-    const concepts: string[] = JSON.parse(raw);
+    // Strip any markdown fences Gemini might add despite instructions
+    const cleaned = raw
+      .trim()
+      .replace(/^```(?:json)?\s*/i, "")
+      .replace(/\s*```$/i, "")
+      .trim();
+
+    const concepts: string[] = JSON.parse(cleaned);
 
     return new Response(
       JSON.stringify({ concepts: concepts.filter(Boolean) }),
