@@ -18,10 +18,13 @@
   box-sizing: border-box;
 }
 
+html,
 body {
   background: var(--bg);
   color: var(--text-primary);
   font-family: var(--font-inter), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Dot pattern background for depth */
@@ -31,7 +34,7 @@ body::before {
   inset: 0;
   background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
   background-size: 24px 24px;
-  opacity: 0.3;
+  opacity: 0.25;
   pointer-events: none;
   z-index: 0;
 }
@@ -43,7 +46,7 @@ body::before {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--bg);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -55,29 +58,25 @@ body::before {
   background: var(--text-secondary);
 }
 
-/* Markdown content styles */
-.prose pre {
-  background: var(--surface) !important;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 1rem;
-  overflow-x: auto;
-}
-
-.prose code {
-  font-family: var(--font-jetbrains), monospace;
+/* ============================================
+   Markdown / prose content styles
+   ============================================ */
+.prose {
   font-size: 0.875rem;
+  line-height: 1.65;
 }
 
-.prose code:not(pre code) {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 0.125rem 0.375rem;
+.prose > *:first-child {
+  margin-top: 0;
+}
+
+.prose > *:last-child {
+  margin-bottom: 0;
 }
 
 .prose p {
   color: var(--text-primary);
+  margin: 0.5em 0;
 }
 
 .prose h1,
@@ -85,17 +84,93 @@ body::before {
 .prose h3,
 .prose h4 {
   color: var(--text-primary);
+  font-weight: 600;
+  margin: 1em 0 0.5em;
+}
+
+.prose h1 {
+  font-size: 1.25em;
+}
+
+.prose h2 {
+  font-size: 1.1em;
+}
+
+.prose h3 {
+  font-size: 1em;
+}
+
+.prose ul,
+.prose ol {
+  margin: 0.5em 0;
+  padding-left: 1.5em;
+}
+
+.prose li {
+  margin: 0.25em 0;
 }
 
 .prose a {
   color: var(--accent);
+  text-decoration: underline;
 }
 
 .prose strong {
   color: var(--text-primary);
+  font-weight: 600;
 }
 
-/* ReactFlow overrides */
+.prose blockquote {
+  border-left: 3px solid var(--accent);
+  padding-left: 1em;
+  margin: 0.75em 0;
+  color: var(--text-secondary);
+}
+
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.75em 0;
+}
+
+.prose th,
+.prose td {
+  border: 1px solid var(--border);
+  padding: 0.4em 0.75em;
+  text-align: left;
+}
+
+.prose th {
+  background: var(--surface);
+}
+
+/* Inline code */
+.prose code {
+  font-family: var(--font-jetbrains), monospace;
+  font-size: 0.85em;
+}
+
+.prose :not(pre) > code {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.125rem 0.375rem;
+  color: var(--accent);
+}
+
+/* Block code — rendered inside our CodeBlock component */
+.prose pre {
+  background: var(--bg) !important;
+  border: 0;
+  border-radius: 0;
+  padding: 1rem;
+  overflow-x: auto;
+  margin: 0;
+}
+
+/* ============================================
+   ReactFlow overrides
+   ============================================ */
 .react-flow__background {
   background: var(--bg) !important;
 }
@@ -104,8 +179,72 @@ body::before {
   font-family: var(--font-inter), system-ui, sans-serif;
 }
 
-/* Highlight.js overrides for dark theme */
-.hljs {
+.react-flow__controls-button {
   background: var(--surface) !important;
+  border-bottom: 1px solid var(--border) !important;
   color: var(--text-primary) !important;
+  fill: var(--text-primary) !important;
+}
+
+.react-flow__controls-button:hover {
+  background: var(--border) !important;
+}
+
+/* ============================================
+   Highlight.js dark theme overrides
+   ============================================ */
+.hljs {
+  background: var(--bg) !important;
+  color: var(--text-primary) !important;
+}
+
+.hljs-keyword,
+.hljs-built_in,
+.hljs-type {
+  color: #ff7b72 !important;
+}
+
+.hljs-string,
+.hljs-attr {
+  color: #a5d6ff !important;
+}
+
+.hljs-number,
+.hljs-literal {
+  color: #79c0ff !important;
+}
+
+.hljs-comment {
+  color: #8b949e !important;
+  font-style: italic;
+}
+
+.hljs-function .hljs-title,
+.hljs-title.function_ {
+  color: #d2a8ff !important;
+}
+
+.hljs-params {
+  color: var(--text-primary) !important;
+}
+
+.hljs-variable,
+.hljs-title.class_ {
+  color: #ffa657 !important;
+}
+
+/* ============================================
+   Misc
+   ============================================ */
+
+/* Hide outline on mouse focus, keep for keyboard */
+button:focus:not(:focus-visible) {
+  outline: none;
+}
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
