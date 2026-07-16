@@ -81,6 +81,7 @@ export async function generateGeminiText(
       systemInstruction: systemPrompt,
       // Nudge toward JSON-ish output
       temperature: 0.2,
+      responseMimeType: "application/json",
     },
   });
 

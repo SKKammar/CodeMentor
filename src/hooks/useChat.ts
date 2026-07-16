@@ -64,16 +64,26 @@ export function useChat(): UseChatReturn {
 
         const decoder = new TextDecoder();
         let fullContent = "";
+        let buffer = "";
 
         setMessages((prev) => [...prev, assistantMessage]);
 
         while (true) {
           const { done, value } = await reader.read();
-          if (done) break;
+          if (done) {
+            if (buffer.trim()) {
+              // process any remaining buffer if needed, though SSE usually ends cleanly
+            }
+            break;
+          }
 
           const chunk = decoder.decode(value, { stream: true });
-          // Parse SSE data
-          const lines = chunk.split("\n");
+          buffer += chunk;
+          
+          const lines = buffer.split("\n");
+          // Keep the last partial line in the buffer
+          buffer = lines.pop() || "";
+
           for (const line of lines) {
             if (line.startsWith("data: ")) {
               try {

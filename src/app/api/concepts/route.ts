@@ -20,35 +20,37 @@ export async function POST(request: NextRequest) {
 
     const supabase = createServerClient();
 
-    // Upsert each concept: increment exposure_count and merge connected_concepts
-    for (const concept of concepts) {
-      const { data: existing } = await supabase
-        .from("concept_graph")
-        .select("id, exposure_count, connected_concepts")
-        .eq("concept", concept)
-        .single();
-
-      if (existing) {
-        const merged = Array.from(
-          new Set([...(existing.connected_concepts || []), ...(connected_concepts || [])])
-        );
-
-        await supabase
+    // Upsert each concept concurrently: increment exposure_count and merge connected_concepts
+    await Promise.all(
+      concepts.map(async (concept) => {
+        const { data: existing } = await supabase
           .from("concept_graph")
-          .update({
-            exposure_count: existing.exposure_count + 1,
-            connected_concepts: merged,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", existing.id);
-      } else {
-        await supabase.from("concept_graph").insert({
-          concept,
-          exposure_count: 1,
-          connected_concepts: connected_concepts || [],
-        });
-      }
-    }
+          .select("id, exposure_count, connected_concepts")
+          .eq("concept", concept)
+          .single();
+
+        if (existing) {
+          const merged = Array.from(
+            new Set([...(existing.connected_concepts || []), ...(connected_concepts || [])])
+          );
+
+          await supabase
+            .from("concept_graph")
+            .update({
+              exposure_count: existing.exposure_count + 1,
+              connected_concepts: merged,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", existing.id);
+        } else {
+          await supabase.from("concept_graph").insert({
+            concept,
+            exposure_count: 1,
+            connected_concepts: connected_concepts || [],
+          });
+        }
+      })
+    );
 
     return new Response(
       JSON.stringify({ success: true, concepts_upserted: concepts.length }),
