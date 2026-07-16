@@ -1,9 +1,13 @@
 import { NextRequest } from "next/server";
+import { getAuthenticatedUser } from "@/lib/supabase/auth";
 import { createServerClient } from "@/lib/supabase/server";
-import { cookies } from "next/headers";
 
 export async function POST(request: NextRequest) {
   try {
+    // Auth guard — only authenticated users can save concepts
+    const { user, response: authError } = await getAuthenticatedUser();
+    if (authError) return authError;
+
     const body = await request.json();
     const { concepts, connected_concepts } = body;
 
@@ -14,21 +18,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const cookieStore = await cookies();
-    const token = (await cookieStore.get("sb-access-token"))?.value;
-
-    if (!token) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    const supabase = createServerClient(token);
+    const supabase = createServerClient();
 
     // Upsert each concept: increment exposure_count and merge connected_concepts
     for (const concept of concepts) {
-      // Check if concept already exists
       const { data: existing } = await supabase
         .from("concept_graph")
         .select("id, exposure_count, connected_concepts")
@@ -36,7 +29,6 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (existing) {
-        // Merge connected concepts (avoid duplicates)
         const merged = Array.from(
           new Set([...(existing.connected_concepts || []), ...(connected_concepts || [])])
         );

@@ -1,24 +1,17 @@
 import { NextRequest } from "next/server";
+import { getAuthenticatedUser } from "@/lib/supabase/auth";
 import { createServerClient } from "@/lib/supabase/server";
-import { cookies } from "next/headers";
 
 export async function POST(request: NextRequest) {
   try {
+    // Auth guard — only authenticated users can save sessions
+    const { user, response: authError } = await getAuthenticatedUser();
+    if (authError) return authError;
+
     const body = await request.json();
     const { language, problem_description, mode, hint_count, solved_independently, concepts } = body;
 
-    // Get user token from cookie (set by Supabase auth)
-    const cookieStore = await cookies();
-    const token = (await cookieStore.get("sb-access-token"))?.value;
-
-    if (!token) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    const supabase = createServerClient(token);
+    const supabase = createServerClient();
 
     const { data, error } = await supabase
       .from("sessions")
